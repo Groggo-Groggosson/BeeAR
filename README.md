@@ -1,13 +1,13 @@
 # BeeAR
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
-[![Server](https://img.shields.io/badge/beear-0.2.0-0E8A16.svg)](packages/server/pyproject.toml)
+[![Server](https://img.shields.io/badge/beear-0.3.0-0E8A16.svg)](packages/server/pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![MergeOS](https://img.shields.io/badge/MergeOS-bounties-5319E7.svg)](https://github.com/mergeos-bounties)
 
-**BeeAR** is a **virtual try-on** stack for **glasses and accessories** â€” frame catalog, pupil-distance (PD) fit estimates, multi-frame compare, plus web / desktop / Android clients.
+**BeeAR** is a **virtual try-on** stack for **glasses and accessories** — frame catalog, pupil-distance (PD) fit estimates, multi-frame compare, plus web / desktop / Android clients built on shared libraries.
 
-Product: [mergeos-bounties/BeeAR](https://github.com/mergeos-bounties/BeeAR)
+**Product:** [mergeos-bounties/BeeAR](https://github.com/mergeos-bounties/BeeAR)
 
 ---
 
@@ -21,7 +21,7 @@ Product: [mergeos-bounties/BeeAR](https://github.com/mergeos-bounties/BeeAR)
 - [CLI reference](#cli-reference)
 - [Catalog & fit](#catalog--fit)
 - [Diagrams](#diagrams)
-- [Architecture](#architecture)
+- [Repository layout](#repository-layout)
 - [Privacy](#privacy)
 - [Development](#development)
 - [Android](#android)
@@ -34,7 +34,7 @@ Product: [mergeos-bounties/BeeAR](https://github.com/mergeos-bounties/BeeAR)
 
 | Package | Path | Role |
 | --- | --- | --- |
-| **@beear/tryon** | `packages/tryon-js` | **Shared JS try-on lib** (fit, overlay) for web + Android WebView |
+| **@beear/tryon** | `packages/tryon-js` | Shared JS try-on lib (fit, overlay) for web + Android WebView |
 | **BeeAR Server** | `packages/server` | Catalog API, try-on helpers, FastAPI, CLI (`beear`) |
 | **BeeAR Web** | `packages/web` | Thin browser host over `@beear/tryon` |
 | **BeeAR Desktop** | `packages/desktop` | Electron shell wrapping the web app |
@@ -42,6 +42,30 @@ Product: [mergeos-bounties/BeeAR](https://github.com/mergeos-bounties/BeeAR)
 | **BeeAR Android app** | `packages/android/app` | Demo host embedding the AAR |
 
 Primary offline path: **server** (`beear demo`).
+
+---
+
+## Libraries (web + Android)
+
+BeeAR try-on is designed as **reusable libraries**:
+
+| Lib | Consumers |
+| --- | --- |
+| **`@beear/tryon`** (`packages/tryon-js`) | Web host, Android WebView, desktop |
+| **`com.beear.webview`** (`:beear-webview` AAR) | Any Android app embedding try-on |
+
+```bash
+# JS lib
+cd packages/tryon-js && npm test && npm run build
+
+# Android AAR
+cd packages/android && ./gradlew :beear-webview:assembleRelease
+# optional offline assets into the AAR:
+node packages/android/scripts/sync-web-assets.mjs
+```
+
+Host apps depend on `:beear-webview` and call `BeeARWebView.attach(activity, BeeARConfig.loopback())`.  
+See [packages/android/README.md](packages/android/README.md) and [packages/tryon-js/README.md](packages/tryon-js/README.md).
 
 ---
 
@@ -112,7 +136,7 @@ beear serve --port 8860
 
 ## Catalog & fit
 
-Frames include id, name, category, style, price, geometry hints.
+Frames include id, name, category, style, price, geometry hints.  
 Fit uses pupil distance in mm and a landmark bounding box (demo uses synthetic landmarks when no camera).
 
 ```powershell
@@ -122,18 +146,16 @@ beear tryon compare aviator_gold wayfarer_black --pd 64
 
 ---
 
-
 ## Diagrams
 
-System architecture and workflow — shown full-width below.
-Open the HTML files for **dark/light theme toggle** and export (PNG/SVG).
+System architecture and workflow — full width. Open the HTML files for **dark/light theme** and export (PNG/SVG).
 
 ### Architecture
 
 [Open interactive diagram](docs/diagrams/architecture.html)
 
 <p align="center">
-  <img src="docs/diagrams/architecture.svg" alt="Architecture diagram" width="100%" />
+  <img src="docs/diagrams/architecture.svg" alt="BeeAR architecture" width="100%" />
 </p>
 
 ### Workflow
@@ -141,53 +163,34 @@ Open the HTML files for **dark/light theme toggle** and export (PNG/SVG).
 [Open interactive diagram](docs/diagrams/workflow.html)
 
 <p align="center">
-  <img src="docs/diagrams/workflow.svg" alt="Workflow diagram" width="100%" />
+  <img src="docs/diagrams/workflow.svg" alt="BeeAR workflow" width="100%" />
 </p>
 
 *Generated with [archify](https://github.com/tt-a1i).*
 
+---
 
-## Libraries (web + Android)
-
-BeeAR try-on is designed as **reusable libraries**:
-
-| Lib | Consumers |
-| --- | --- |
-| **`@beear/tryon`** (`packages/tryon-js`) | Web host, Android WebView, desktop |
-| **`com.beear.webview`** (`:beear-webview` AAR) | Any Android app embedding try-on |
-
-```bash
-# JS lib
-cd packages/tryon-js && npm test && npm run build
-
-# Android AAR
-cd packages/android && ./gradlew :beear-webview:assembleRelease
-# optional offline assets into the AAR:
-node packages/android/scripts/sync-web-assets.mjs
-```
-
-Host apps depend on `:beear-webview` and call `BeeARWebView.attach(activity, BeeARConfig.loopback())`.
-See [packages/android/README.md](packages/android/README.md) and [packages/tryon-js/README.md](packages/tryon-js/README.md).
-
-## Architecture
+## Repository layout
 
 ```text
   Web / Desktop / Android
-            â”‚
-            â–¼
+            │
+            ▼
      BeeAR Server (FastAPI)
        catalog · sessions · tryon
-            â”‚
+            │
      landmark / PD fit engine
-```
 
-```text
-packages/server/src/beear/
-  cli.py
-  catalog.py
-  tryon.py
-  api.py
+packages/
+  tryon-js/          # @beear/tryon
+  server/src/beear/  # cli, catalog, tryon, api
+  web/               # browser host
+  desktop/           # Electron shell
+  android/
+    beear-webview/   # AAR library
+    app/             # demo host
 docs/screenshots/
+docs/diagrams/
 ```
 
 ---
@@ -225,14 +228,14 @@ cd packages/android
 
 ## MergeOS bounties
 
-Frames, MediaPipe landmarks, PD calibration, Android UX.
-Star â†’ claim â†’ PR **master** â†’ MRG **25â€“200**. Evidence: web/desktop screenshots or emulator shots.
+Frames, MediaPipe landmarks, PD calibration, Android UX.  
+Star → claim → PR **master** → MRG **25–200**. Evidence: web/desktop screenshots or emulator shots.
 
 ---
 
-## Tiáº¿ng Viá»‡t
+## Tiếng Việt
 
-**BeeAR** thá»­ kÃ­nh/phá»¥ kiá»‡n áº£o (catalog + fit PD). Offline: `cd packages/server && beear demo`.
+**BeeAR** thử kính / phụ kiện ảo (catalog + fit PD). Offline: `cd packages/server && beear demo`.
 
 ---
 
