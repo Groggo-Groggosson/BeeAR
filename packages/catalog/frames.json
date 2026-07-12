@@ -321,6 +321,22 @@
         "bridge_mm": 18,
         "temple_mm": 145
       }
+    },
+    {
+      "id": "rectangle_frost",
+      "name": "Rectangle Frost",
+      "brand": "BeeAR Studio",
+      "category": "glasses",
+      "style": "rectangle",
+      "color": "#94A3B8",
+      "lens_tint": "rgba(148,163,184,0.28)",
+      "price_cents": 7600,
+      "svg": "rectangle.svg",
+      "fit": {
+        "width_mm": 142,
+        "bridge_mm": 18,
+        "temple_mm": 145
+      }
     }
   ]
 }
