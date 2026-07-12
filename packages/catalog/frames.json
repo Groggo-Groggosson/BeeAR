@@ -169,6 +169,18 @@
       "price_cents": 9100,
       "svg": "aviator.svg",
       "fit": { "width_mm": 142, "bridge_mm": 18, "temple_mm": 142 }
+    },
+    {
+      "id": "round_matte_black",
+      "name": "Round Matte Black",
+      "brand": "BeeAR Studio",
+      "category": "glasses",
+      "style": "round",
+      "color": "#171717",
+      "lens_tint": "rgba(20,20,20,0.3)",
+      "price_cents": 7400,
+      "svg": "round.svg",
+      "fit": { "width_mm": 134, "bridge_mm": 20, "temple_mm": 140 }
     }
   ]
 }
