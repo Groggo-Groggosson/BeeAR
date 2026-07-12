@@ -1,24 +1,43 @@
 # `@beear/tryon`
 
-**Core virtual try-on library** for BeeAR — shared by:
+**Core virtual try-on library** for BeeAR — shared by web, desktop, and Android WebView.
 
 | Host | How |
 | --- | --- |
-| **Web app** (`packages/web`) | `<script src="/assets/beear-tryon.js">` → `window.BeeARTryOn` |
-| **Android WebView** | Same IIFE loaded from server or `file:///android_asset/beear/` |
-| **Node / tests** | ESM import from `src/index.js` |
+| **Web app** (`packages/web`) | `<script src="beear-tryon.js">` → `window.BeeARTryOn` |
+| **Android WebView** | Same IIFE from server or `file:///android_asset/beear/` |
+| **Node / bundlers** | ESM import from `src/index.js` |
 | **Server parity** | Fit math mirrors `beear.tryon` (Python) |
 
-## Install / build
+**Version:** `0.3.0` · **Release:** [libs-v0.3.0](https://github.com/mergeos-bounties/BeeAR/releases/tag/libs-v0.3.0)
 
-```bash
-cd packages/tryon-js
-npm test
-npm run build
-# → dist/beear-tryon.js  (+ copies to packages/web/assets/)
+---
+
+## Install
+
+### Browser (CDN / GitHub Release)
+
+```html
+<script src="https://github.com/mergeos-bounties/BeeAR/releases/download/libs-v0.3.0/beear-tryon-0.3.0.js"></script>
+<script>
+  console.log(BeeARTryOn.VERSION); // "0.3.0"
+  const fit = BeeARTryOn.estimateFit(frame, {
+    pupilDistancePx: 64,
+    faceWidthPx: 180,
+    pdMm: 64,
+  });
+</script>
 ```
 
-## API
+Or copy `beear-tryon-0.3.0.js` next to your page.
+
+### npm (from release tarball)
+
+```bash
+npm install https://github.com/mergeos-bounties/BeeAR/releases/download/libs-v0.3.0/beear-tryon-0.3.0.tgz
+# or after downloading the asset:
+npm install ./beear-tryon-0.3.0.tgz
+```
 
 ```js
 import {
@@ -28,11 +47,22 @@ import {
   compareFrames,
   drawGlassesOverlay,
   DEFAULT_PD_MM,
+  VERSION,
 } from "@beear/tryon";
-
-// or browser:
-// const { estimateFit, drawGlassesOverlay } = BeeARTryOn;
 ```
+
+### From source
+
+```bash
+cd packages/tryon-js
+npm test
+npm run build
+# → dist/beear-tryon.js  (+ copies to packages/web/assets/)
+```
+
+---
+
+## API
 
 | Function | Purpose |
 | --- | --- |
@@ -43,12 +73,17 @@ import {
 | `paintFrameShape(ctx, frame, ow, oh)` | Draw silhouette |
 | `drawFrameAt(ctx, …)` | Positioned frame on face |
 | `drawGlassesOverlay(ctx, face, A, B, compare, pdMm)` | Full A / A\|B overlay |
+| `VERSION` | Library version string |
 
-## WebView
+## WebView hints
 
 ```js
 BeeARTryOn.WebViewHints.defaultLoopbackUrl; // http://localhost:8860/
 BeeARTryOn.WebViewHints.assetPath;          // file:///android_asset/beear/index.html
 ```
 
-Android host library: `packages/android/beear-webview` (AAR).
+Android host library: [`beear-webview`](../android/beear-webview) AAR.
+
+## License
+
+MIT · [mergeos-bounties/BeeAR](https://github.com/mergeos-bounties/BeeAR)

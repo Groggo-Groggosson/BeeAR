@@ -2,6 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![Server](https://img.shields.io/badge/beear-0.3.0-0E8A16.svg)](packages/server/pyproject.toml)
+[![Libs](https://img.shields.io/badge/libs-v0.3.0-0E8A16.svg)](https://github.com/mergeos-bounties/BeeAR/releases/tag/libs-v0.3.0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![MergeOS](https://img.shields.io/badge/MergeOS-bounties-5319E7.svg)](https://github.com/mergeos-bounties)
 
@@ -47,25 +48,56 @@ Primary offline path: **server** (`beear demo`).
 
 ## Libraries (web + Android)
 
-BeeAR try-on is designed as **reusable libraries**:
+BeeAR try-on ships as **reusable libraries** — download prebuilt artifacts from GitHub Releases:
 
-| Lib | Consumers |
-| --- | --- |
-| **`@beear/tryon`** (`packages/tryon-js`) | Web host, Android WebView, desktop |
-| **`com.beear.webview`** (`:beear-webview` AAR) | Any Android app embedding try-on |
+**[libs-v0.3.0](https://github.com/mergeos-bounties/BeeAR/releases/tag/libs-v0.3.0)**
+
+| Lib | Artifact | Consumers |
+| --- | --- | --- |
+| **`@beear/tryon`** | [`beear-tryon-0.3.0.js`](https://github.com/mergeos-bounties/BeeAR/releases/download/libs-v0.3.0/beear-tryon-0.3.0.js) · [npm tgz](https://github.com/mergeos-bounties/BeeAR/releases/download/libs-v0.3.0/beear-tryon-0.3.0.tgz) | Web host, Android WebView, desktop |
+| **`com.beear:beear-webview`** | [`beear-webview-0.3.0.aar`](https://github.com/mergeos-bounties/BeeAR/releases/download/libs-v0.3.0/beear-webview-0.3.0.aar) | Any Android app embedding try-on |
+
+### Web install
+
+```html
+<script src="https://github.com/mergeos-bounties/BeeAR/releases/download/libs-v0.3.0/beear-tryon-0.3.0.js"></script>
+<script>
+  console.log(BeeARTryOn.VERSION); // 0.3.0
+</script>
+```
+
+```bash
+npm install https://github.com/mergeos-bounties/BeeAR/releases/download/libs-v0.3.0/beear-tryon-0.3.0.tgz
+```
+
+### Android install
+
+```kotlin
+// app/libs/beear-webview-0.3.0.aar
+implementation(files("libs/beear-webview-0.3.0.aar"))
+// + androidx.activity / core / fragment / appcompat
+
+val view = BeeARWebView(this)
+view.attach(this, BeeARConfig.loopback()) // or BeeARConfig.offlineAssets()
+view.loadTryOn()
+```
+
+### Build from source
 
 ```bash
 # JS lib
 cd packages/tryon-js && npm test && npm run build
 
-# Android AAR
-cd packages/android && ./gradlew :beear-webview:assembleRelease
-# optional offline assets into the AAR:
+# Android AAR (sync offline UI into assets first)
 node packages/android/scripts/sync-web-assets.mjs
+cd packages/android && ./gradlew :beear-webview:assembleRelease
+
+# Full release package → dist/release/ (+ optional GitHub Release)
+node scripts/release-libs.mjs
+node scripts/release-libs.mjs --publish
 ```
 
-Host apps depend on `:beear-webview` and call `BeeARWebView.attach(activity, BeeARConfig.loopback())`.  
-See [packages/android/README.md](packages/android/README.md) and [packages/tryon-js/README.md](packages/tryon-js/README.md).
+Docs: [packages/tryon-js/README.md](packages/tryon-js/README.md) · [packages/android/README.md](packages/android/README.md)
 
 ---
 
