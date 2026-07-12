@@ -15,4 +15,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "BeeARAndroid"
+include(":beear-webview")
 include(":app")
