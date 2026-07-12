@@ -11,6 +11,49 @@
 
 Org: [mergeos-bounties](https://github.com/mergeos-bounties) · MergeOS MRG bounties.
 
+## Screenshots (demo face)
+
+Live capture from `beear serve` + **Demo face** mode (no camera required):
+
+### Aviator Gold
+
+![BeeAR demo — Aviator Gold](docs/screenshots/demo-aviator.png)
+
+### Wayfarer Black
+
+![BeeAR demo — Wayfarer Black](docs/screenshots/demo-wayfarer.png)
+
+### Cat-Eye Rose
+
+![BeeAR demo — Cat-Eye Rose](docs/screenshots/demo-cateye.png)
+
+### Sport wrap + PD 70 mm
+
+![BeeAR demo — Sport PD calibration](docs/screenshots/demo-sport-pd70.png)
+
+### Compare A/B
+
+![BeeAR demo — compare two frames](docs/screenshots/demo-compare.png)
+
+### Accessories
+
+![BeeAR demo — accessory](docs/screenshots/demo-accessory.png)
+
+### Vietnamese UI
+
+![BeeAR demo — VI UI](docs/screenshots/demo-vi-ui.png)
+
+Re-capture:
+
+```powershell
+# terminal 1
+cd packages/server
+beear serve --port 8860
+
+# terminal 2
+python scripts/capture_screenshots.py
+```
+
 ## Quick start (offline)
 
 ```powershell
@@ -67,7 +110,10 @@ packages/
   desktop/    # Electron Windows shell
   android/    # Kotlin WebView
   catalog/    # Frame SKUs (JSON + SVG assets)
+docs/screenshots/
 docs/BOUNTY.md
+docs/PRIVACY.md
+scripts/capture_screenshots.py
 ```
 
 ## MergeOS bounties
