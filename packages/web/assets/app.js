@@ -26,6 +26,28 @@ let sessionId = null;
 
 let face = { left: [0.38, 0.42], right: [0.62, 0.42], t: 0, source: "geometric" };
 
+/** Photoreal demo faces (generated assets) with eye landmarks in image 0–1 coords */
+const DEMO_FACES = [
+  {
+    id: "face-01",
+    label: "Demo A",
+    src: "/assets/demo-faces/face-01.jpg",
+    // calibrated for front portrait (pupil centers, image 0–1)
+    left: [0.385, 0.428],
+    right: [0.615, 0.428],
+  },
+  {
+    id: "face-02",
+    label: "Demo B",
+    src: "/assets/demo-faces/face-02.jpg",
+    left: [0.38, 0.422],
+    right: [0.62, 0.422],
+  },
+];
+let demoFaceIndex = 0;
+let demoImages = {}; // id -> HTMLImageElement
+let demoReady = false;
+
 const I18N = {
   en: {
     tagline: "Virtual try-on · glasses & accessories",
@@ -34,7 +56,8 @@ const I18N = {
     pdHint: "Calibrate pupil distance for better fit scale",
     select: "Select a SKU",
     cam: "📷 Camera",
-    demo: "Demo face",
+    demo: "Demo photo",
+    demoNext: "Next face",
     compare: "Compare",
     snap: "Snapshot",
     gallery: "Gallery",
@@ -42,12 +65,13 @@ const I18N = {
     consentBody:
       "BeeAR uses the camera only in your browser for try-on. Video is not uploaded to the server.",
     consentOk: "Allow & start",
-    consentDemo: "Use demo face",
-    hintIdle: "Start camera or use Demo face · pick a frame",
-    hintDemo: "Demo face · PD slider adjusts scale · Compare picks A/B",
+    consentDemo: "Use demo photo",
+    hintIdle: "Start camera or use Demo photo · pick a frame",
+    hintDemo: "Photoreal demo face · PD slider · Compare A/B · Next face",
     hintCam: "Camera live",
     trackGeo: "tracking: geometric",
     trackMp: "tracking: mediapipe",
+    trackDemo: "tracking: demo photo",
   },
   vi: {
     tagline: "Thử kính & phụ kiện ảo",
@@ -56,7 +80,8 @@ const I18N = {
     pdHint: "Hiệu chỉnh PD để scale kính chính xác hơn",
     select: "Chọn mẫu",
     cam: "📷 Camera",
-    demo: "Mặt demo",
+    demo: "Ảnh demo",
+    demoNext: "Đổi mặt",
     compare: "So sánh",
     snap: "Chụp",
     gallery: "Thư viện",
@@ -64,12 +89,13 @@ const I18N = {
     consentBody:
       "BeeAR chỉ dùng camera trên trình duyệt để thử đồ. Video không gửi lên server.",
     consentOk: "Cho phép & bắt đầu",
-    consentDemo: "Dùng mặt demo",
-    hintIdle: "Bật camera hoặc mặt demo · chọn khung",
-    hintDemo: "Mặt demo · chỉnh PD · So sánh chọn A/B",
+    consentDemo: "Dùng ảnh demo",
+    hintIdle: "Bật camera hoặc ảnh demo · chọn khung",
+    hintDemo: "Ảnh người demo · chỉnh PD · So sánh · Đổi mặt",
     hintCam: "Camera đang bật",
     trackGeo: "tracking: hình học",
     trackMp: "tracking: mediapipe",
+    trackDemo: "tracking: ảnh demo",
   },
 };
 
@@ -84,6 +110,8 @@ function applyLang() {
   document.getElementById("pd-hint").textContent = t("pdHint");
   document.getElementById("btn-cam").textContent = t("cam");
   document.getElementById("btn-demo").textContent = t("demo");
+  const btnNext = document.getElementById("btn-demo-next");
+  if (btnNext) btnNext.textContent = t("demoNext");
   document.getElementById("btn-compare").textContent = t("compare");
   document.getElementById("btn-snap").textContent = t("snap");
   document.getElementById("btn-gallery").textContent = t("gallery");
@@ -92,8 +120,49 @@ function applyLang() {
   document.getElementById("consent-body").textContent = t("consentBody");
   document.getElementById("consent-ok").textContent = t("consentOk");
   document.getElementById("consent-demo").textContent = t("consentDemo");
-  trackBadge.textContent = tracking === "mediapipe" ? t("trackMp") : t("trackGeo");
+  if (mode === "demo") trackBadge.textContent = t("trackDemo");
+  else trackBadge.textContent = tracking === "mediapipe" ? t("trackMp") : t("trackGeo");
   if (!selected) metaEl.textContent = t("select");
+}
+
+function loadDemoImages() {
+  return Promise.all(
+    DEMO_FACES.map(
+      (f) =>
+        new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => {
+            demoImages[f.id] = img;
+            resolve(true);
+          };
+          img.onerror = () => resolve(false);
+          img.src = f.src;
+        }),
+    ),
+  ).then(() => {
+    demoReady = DEMO_FACES.some((f) => demoImages[f.id]);
+    return demoReady;
+  });
+}
+
+/** Draw image cover-fit into canvas; return draw rect for landmark mapping */
+function drawImageCover(img, w, h) {
+  const ir = img.width / img.height;
+  const cr = w / h;
+  let dw, dh, dx, dy;
+  if (ir > cr) {
+    dh = h;
+    dw = h * ir;
+    dx = (w - dw) / 2;
+    dy = 0;
+  } else {
+    dw = w;
+    dh = w / ir;
+    dx = 0;
+    dy = (h - dh) / 2;
+  }
+  ctx.drawImage(img, dx, dy, dw, dh);
+  return { dx, dy, dw, dh };
 }
 
 async function api(path, opts) {
@@ -184,6 +253,25 @@ function updateMeta() {
 }
 
 function drawDemoFace(w, h) {
+  const def = DEMO_FACES[demoFaceIndex % DEMO_FACES.length];
+  const img = demoImages[def.id];
+  ctx.fillStyle = "#0a1020";
+  ctx.fillRect(0, 0, w, h);
+
+  if (img && img.complete && img.naturalWidth) {
+    const { dx, dy, dw, dh } = drawImageCover(img, w, h);
+    // Map image-normalized eye landmarks → canvas-normalized
+    const lx = dx + def.left[0] * dw;
+    const ly = dy + def.left[1] * dh;
+    const rx = dx + def.right[0] * dw;
+    const ry = dy + def.right[1] * dh;
+    face.left = [lx / w, ly / h];
+    face.right = [rx / w, ry / h];
+    face.source = "demo-photo";
+    return;
+  }
+
+  // Fallback cartoon only if photos failed to load
   const cx = w / 2,
     cy = h * 0.48;
   const rx = w * 0.22,
@@ -195,35 +283,12 @@ function drawDemoFace(w, h) {
   ctx.beginPath();
   ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#2b2118";
-  ctx.beginPath();
-  ctx.ellipse(cx, cy - ry * 0.55, rx * 1.05, ry * 0.55, 0, Math.PI, 0);
-  ctx.fill();
   const eyeY = cy - 10;
   const eyeDX = rx * 0.42;
-  ctx.fillStyle = "#fff";
-  ctx.beginPath();
-  ctx.ellipse(cx - eyeDX, eyeY, 16, 10, 0, 0, Math.PI * 2);
-  ctx.ellipse(cx + eyeDX, eyeY, 16, 10, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#1e293b";
-  ctx.beginPath();
-  ctx.arc(cx - eyeDX, eyeY, 5, 0, Math.PI * 2);
-  ctx.arc(cx + eyeDX, eyeY, 5, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = "#b88466";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(cx, eyeY + 12);
-  ctx.lineTo(cx - 6, eyeY + 36);
-  ctx.lineTo(cx + 6, eyeY + 36);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.ellipse(cx, cy + ry * 0.35, 18, 8, 0, 0.1, Math.PI - 0.1);
-  ctx.stroke();
   if (face.source !== "mediapipe") {
     face.left = [(cx - eyeDX) / w, eyeY / h];
     face.right = [(cx + eyeDX) / w, eyeY / h];
+    face.source = "demo-fallback";
   }
 }
 
@@ -238,10 +303,13 @@ function drawFrameAt(frame, midX, midY, angle, pd, xOffset = 0) {
   const { overlayW, overlayH } = overlaySize(frame, pd);
   const cat = frame.category;
   ctx.save();
-  ctx.translate(
-    midX + xOffset,
-    midY + (cat === "accessory" && frame.style === "hat" ? -pd * 0.9 : pd * 0.08),
-  );
+  const yOff =
+    cat === "accessory" && frame.style === "hat"
+      ? -pd * 0.9
+      : cat === "accessory" && frame.style === "necklace"
+        ? pd * 1.35
+        : pd * 0.02;
+  ctx.translate(midX + xOffset, midY + yOff);
   ctx.rotate(angle);
   if (frame.style === "earring") {
     ctx.translate(-pd * 1.15, pd * 0.5);
@@ -249,7 +317,6 @@ function drawFrameAt(frame, midX, midY, angle, pd, xOffset = 0) {
   } else if (frame.style === "hat") {
     paintFrameShape(frame, overlayW * 1.35, overlayH * 0.9);
   } else if (frame.style === "necklace") {
-    ctx.translate(0, pd * 1.4);
     paintFrameShape(frame, overlayW * 0.5, overlayH * 1.4);
   } else {
     paintFrameShape(frame, overlayW, overlayH);
@@ -493,11 +560,8 @@ function loop() {
     }
     sendToMesh();
   } else if (mode === "demo") {
-    ctx.fillStyle = "#0a1020";
-    ctx.fillRect(0, 0, w, h);
     drawDemoFace(w, h);
     face.t += 0.02;
-    face.source = "demo";
   } else {
     ctx.fillStyle = "#0a1020";
     ctx.fillRect(0, 0, w, h);
@@ -574,9 +638,19 @@ function startDemo() {
   consentEl.classList.add("hidden");
   stopCameraTracks();
   mode = "demo";
-  tracking = "geometric";
-  trackBadge.textContent = t("trackGeo");
-  hintEl.textContent = t("hintDemo");
+  tracking = "demo";
+  trackBadge.textContent = t("trackDemo");
+  const faceName = DEMO_FACES[demoFaceIndex % DEMO_FACES.length].label;
+  hintEl.textContent = t("hintDemo") + " · " + faceName;
+}
+
+function nextDemoFace() {
+  demoFaceIndex = (demoFaceIndex + 1) % DEMO_FACES.length;
+  if (mode !== "demo") startDemo();
+  else {
+    const faceName = DEMO_FACES[demoFaceIndex].label;
+    hintEl.textContent = t("hintDemo") + " · " + faceName;
+  }
 }
 
 function stopCameraTracks() {
@@ -646,6 +720,8 @@ function renderGallery() {
 // UI wiring
 document.getElementById("btn-cam").onclick = startCamera;
 document.getElementById("btn-demo").onclick = startDemo;
+const btnDemoNext = document.getElementById("btn-demo-next");
+if (btnDemoNext) btnDemoNext.onclick = nextDemoFace;
 document.getElementById("btn-snap").onclick = snapshot;
 document.getElementById("btn-lang").onclick = () => {
   lang = lang === "en" ? "vi" : "en";
@@ -672,12 +748,14 @@ document.getElementById("consent-ok").onclick = startCameraAfterConsent;
 document.getElementById("consent-demo").onclick = startDemo;
 
 applyLang();
-loadCatalog()
+Promise.all([loadDemoImages(), loadCatalog().catch((e) => {
+  hintEl.textContent = "API error: " + e.message + " — is beear serve running?";
+})])
   .then(() => {
     startDemo();
     loop();
   })
-  .catch((e) => {
-    hintEl.textContent = "API error: " + e.message + " — is beear serve running?";
+  .catch(() => {
+    startDemo();
     loop();
   });

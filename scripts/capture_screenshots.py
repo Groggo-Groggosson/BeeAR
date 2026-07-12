@@ -60,23 +60,22 @@ def main() -> None:
     try:
         driver.get(BASE + "/")
         wait.until(lambda d: d.find_elements(By.CSS_SELECTOR, ".sku"))
-        # ensure demo face mode
-        try:
-            driver.find_element(By.ID, "btn-demo").click()
-        except Exception:
-            pass
-        # dismiss consent if visible
+        # ensure demo photo mode
         try:
             cons = driver.find_element(By.ID, "consent")
             if "hidden" not in (cons.get_attribute("class") or ""):
                 driver.find_element(By.ID, "consent-demo").click()
         except Exception:
             pass
-        time.sleep(1.5)
+        try:
+            driver.find_element(By.ID, "btn-demo").click()
+        except Exception:
+            pass
+        time.sleep(2.0)
 
-        # 1) Overview with aviator (first)
+        # 1) Overview with aviator on photoreal face
         click_sku(driver, "Aviator")
-        time.sleep(0.8)
+        time.sleep(1.0)
         driver.save_screenshot(str(OUT / "demo-aviator.png"))
         print("saved demo-aviator.png")
 
@@ -115,7 +114,25 @@ def main() -> None:
         driver.save_screenshot(str(OUT / "demo-compare.png"))
         print("saved demo-compare.png")
 
-        # 6) Accessories filter + earring
+        # 6) Second photoreal face + wayfarer
+        try:
+            driver.find_element(By.ID, "btn-demo-next").click()
+            time.sleep(0.5)
+            # reset filter to all
+            sel = driver.find_element(By.ID, "filter")
+            for opt in sel.find_elements(By.TAG_NAME, "option"):
+                if opt.get_attribute("value") == "":
+                    opt.click()
+                    break
+            time.sleep(0.5)
+            click_sku(driver, "Wayfarer")
+            time.sleep(0.8)
+            driver.save_screenshot(str(OUT / "demo-face-b.png"))
+            print("saved demo-face-b.png")
+        except Exception as e:
+            print("face-b skip:", e)
+
+        # 7) Accessories filter + earring
         sel = driver.find_element(By.ID, "filter")
         for opt in sel.find_elements(By.TAG_NAME, "option"):
             if opt.get_attribute("value") == "accessory":
@@ -123,14 +140,14 @@ def main() -> None:
                 break
         time.sleep(0.8)
         try:
-            click_sku(driver, "Cap")
-        except Exception:
             click_sku(driver, "Hoop")
+        except Exception:
+            click_sku(driver, "Cap")
         time.sleep(0.7)
         driver.save_screenshot(str(OUT / "demo-accessory.png"))
         print("saved demo-accessory.png")
 
-        # 7) Vietnamese UI
+        # 8) Vietnamese UI
         driver.find_element(By.ID, "btn-lang").click()
         time.sleep(0.5)
         driver.save_screenshot(str(OUT / "demo-vi-ui.png"))

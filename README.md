@@ -13,11 +13,11 @@ Org: [mergeos-bounties](https://github.com/mergeos-bounties) · MergeOS MRG boun
 
 ## Screenshots (demo face)
 
-Live capture from `beear serve` + **Demo face** mode (no camera required):
+Live capture from `beear serve` + **Demo photo** mode (photoreal AI faces, no camera required):
 
-### Aviator Gold
+### Aviator Gold (Demo photo A)
 
-![BeeAR demo — Aviator Gold](docs/screenshots/demo-aviator.png)
+![BeeAR demo — Aviator Gold on photoreal face](docs/screenshots/demo-aviator.png)
 
 ### Wayfarer Black
 
@@ -34,6 +34,10 @@ Live capture from `beear serve` + **Demo face** mode (no camera required):
 ### Compare A/B
 
 ![BeeAR demo — compare two frames](docs/screenshots/demo-compare.png)
+
+### Demo photo B (Next face)
+
+![BeeAR demo — second photoreal face](docs/screenshots/demo-face-b.png)
 
 ### Accessories
 
@@ -91,10 +95,11 @@ See [packages/android/README.md](packages/android/README.md) — WebView loads `
 
 ## How try-on works
 
-1. Camera stream (or **Demo face** offline image) — camera consent banner first
-2. Face landmarks: **MediaPipe Face Mesh** when CDN loads; **geometric** fallback offline
-3. **PD (mm)** slider calibrates scale; **Compare** mode splits A/B frames
-4. Snapshot → download + local gallery; optional wishlist session API
+1. Camera stream (or **Demo photo** — photoreal AI-generated faces offline) — consent banner first
+2. Demo mode uses `packages/web/assets/demo-faces/*.jpg` with calibrated eye landmarks (**Next face** switches models)
+3. Live camera: **MediaPipe Face Mesh** when CDN loads; geometric fallback otherwise
+4. **PD (mm)** slider calibrates scale; **Compare** mode splits A/B frames
+5. Snapshot → download + local gallery; optional wishlist session API
 
 ```powershell
 beear tryon fit aviator_gold --pd 66
