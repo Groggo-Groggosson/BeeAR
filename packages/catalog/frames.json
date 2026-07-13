@@ -1,6 +1,38 @@
 {
-  "version": 5,
+  "version": 6,
   "frames": [
+    {
+      "id": "meshy_square_frames",
+      "name": "Meshy Square Frames",
+      "brand": "BeeAR x Meshy",
+      "category": "glasses",
+      "style": "rectangle",
+      "color": "#2A2A2A",
+      "lens_tint": "rgba(30,40,55,0.32)",
+      "price_cents": 11900,
+      "svg": "rectangle.svg",
+      "glb": "glasses_meshy_square.glb",
+      "render_mode": "glb3d",
+      "featured": true,
+      "fit": {
+        "width_mm": 140,
+        "bridge_mm": 18,
+        "temple_mm": 145
+      },
+      "studio_fit": {
+        "scale": 1.06,
+        "y": -0.01,
+        "z": 0.03
+      },
+      "ar_fit": {
+        "scale": 1.04,
+        "y": 0,
+        "pitch": 0.05,
+        "yaw": 0
+      },
+      "description": "Photoreal square / rectangle glasses from Meshy for 3D person try-on",
+      "source": "meshy-019f58d8-506d-7a93-8af0-9f75dad043a0.glb"
+    },
     {
       "id": "meshy_studio_frames",
       "name": "Meshy Studio Frames",
@@ -13,7 +45,7 @@
       "svg": "aviator.svg",
       "glb": "glasses_meshy_studio.glb",
       "render_mode": "glb3d",
-      "featured": true,
+      "featured": false,
       "fit": {
         "width_mm": 142,
         "bridge_mm": 18,
