@@ -1,5 +1,5 @@
 {
-  "version": 9,
+  "version": 10,
   "frames": [
     {
       "id": "meshy_ellipse_frames",
@@ -539,6 +539,25 @@
         "temple_mm": 145
       },
       "description": "Smoke-tint aviators for outdoor AR demos"
+    },
+    {
+      "id": "aviator_rose_gold",
+      "name": "Aviator Rose Gold",
+      "brand": "BeeAR Studio",
+      "category": "glasses",
+      "style": "aviator",
+      "color": "#B76E79",
+      "lens_tint": "rgba(120,60,70,0.28)",
+      "price_cents": 9400,
+      "svg": "aviator.svg",
+      "glb": "aviator-gold.glb",
+      "fit": {
+        "width_mm": 140,
+        "bridge_mm": 18,
+        "temple_mm": 140
+      },
+      "render_mode": "glb3d",
+      "description": "Rose-gold aviator colorway reusing aviator mesh assets"
     }
   ],
   "person_models": [
