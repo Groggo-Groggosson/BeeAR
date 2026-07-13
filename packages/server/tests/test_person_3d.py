@@ -16,13 +16,26 @@ def test_person_bust_glb_exists():
     assert path.read_bytes()[:4] == b"glTF"
 
 
+def test_meshy_character_glbs_exist():
+    for name in ("person_female.glb", "person_male.glb"):
+        path = GLB_DIR / name
+        assert path.is_file(), f"{name} missing"
+        assert path.stat().st_size > 1_000_000
+        assert path.read_bytes()[:4] == b"glTF"
+
+
 def test_person_models_in_catalog():
     people = list_person_models()
     assert people
-    bust = next((p for p in people if p["id"] == "person_bust"), None)
-    assert bust is not None
-    assert bust["has_glb"] is True
-    assert bust["glb_url"] == "/catalog/glb/person_bust.glb"
+    ids = {p["id"] for p in people}
+    assert "person_female" in ids
+    assert "person_male" in ids
+    assert "person_bust" in ids
+    female = next(p for p in people if p["id"] == "person_female")
+    assert female["has_glb"] is True
+    assert female["glb_url"] == "/catalog/glb/person_female.glb"
+    male = next(p for p in people if p["id"] == "person_male")
+    assert male["has_glb"] is True
 
 
 def test_many_glasses_have_glb():

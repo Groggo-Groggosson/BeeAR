@@ -1,5 +1,5 @@
 /**
- * BeeAR 3D Studio — person bust + glasses GLB try-on (Three.js).
+ * BeeAR 3D Studio — real character GLBs (female/male/bust) + glasses try-on.
  */
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
@@ -10,24 +10,32 @@ const catalogEl = document.getElementById("catalog");
 const metaEl = document.getElementById("meta");
 const scaleEl = document.getElementById("scale");
 const yoffEl = document.getElementById("yoff");
+const zoffEl = document.getElementById("zoff");
 const scaleVal = document.getElementById("scale-val");
 const yVal = document.getElementById("y-val");
+const zVal = document.getElementById("z-val");
 const btnAuto = document.getElementById("btn-auto");
 const btnSnap = document.getElementById("btn-snap");
 const filterEl = document.getElementById("filter");
+const personSelect = document.getElementById("person-select");
 
 const state = {
   frames: [],
   selected: null,
   person: null,
+  personRoot: new THREE.Group(),
   glasses: null,
   glassesCache: {},
+  personCache: {},
   loading: {},
   auto: true,
   fitScale: 1,
   yOffset: 0,
+  zOffset: 0,
   personModels: [],
+  activePerson: null,
   faceAnchor: new THREE.Vector3(0, 1.55, 0.92),
+  headWidth: 0.28,
 };
 
 const renderer = new THREE.WebGLRenderer({
@@ -42,54 +50,50 @@ renderer.outputColorSpace = THREE.SRGBColorSpace;
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(38, 960 / 640, 0.05, 100);
-camera.position.set(0.35, 1.55, 3.6);
+camera.position.set(0.45, 1.2, 3.2);
 
 const controls = new OrbitControls(camera, canvas);
-controls.target.set(0, 1.15, 0);
+controls.target.set(0, 0.95, 0);
 controls.enableDamping = true;
-controls.minDistance = 1.6;
-controls.maxDistance = 7;
+controls.minDistance = 0.8;
+controls.maxDistance = 12;
 controls.update();
 
-// lights
-scene.add(new THREE.AmbientLight(0xffffff, 0.75));
-const key = new THREE.DirectionalLight(0xfff2dd, 1.15);
+scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+const key = new THREE.DirectionalLight(0xfff2dd, 1.2);
 key.position.set(2.5, 4, 3);
 scene.add(key);
-const fill = new THREE.DirectionalLight(0x88aaff, 0.45);
+const fill = new THREE.DirectionalLight(0x88aaff, 0.5);
 fill.position.set(-3, 2, 1);
 scene.add(fill);
-const rim = new THREE.DirectionalLight(0xffffff, 0.35);
+const rim = new THREE.DirectionalLight(0xffffff, 0.4);
 rim.position.set(0, 2, -3);
 scene.add(rim);
 
-// ground disc
 const ground = new THREE.Mesh(
-  new THREE.CircleGeometry(2.2, 48),
+  new THREE.CircleGeometry(2.4, 48),
   new THREE.MeshStandardMaterial({ color: 0x121a2c, metalness: 0.1, roughness: 0.9 }),
 );
 ground.rotation.x = -Math.PI / 2;
-ground.position.y = -0.55;
+ground.position.y = 0;
 scene.add(ground);
 
-// soft pedestal
 const ped = new THREE.Mesh(
-  new THREE.CylinderGeometry(0.85, 0.95, 0.18, 40),
+  new THREE.CylinderGeometry(0.9, 1.0, 0.12, 40),
   new THREE.MeshStandardMaterial({ color: 0x1a2438, metalness: 0.2, roughness: 0.75 }),
 );
-ped.position.y = -0.42;
+ped.position.y = -0.06;
 scene.add(ped);
 
 const loader = new GLTFLoader();
 const glassesRoot = new THREE.Group();
 glassesRoot.name = "glasses_root";
-scene.add(glassesRoot);
+// Parent glasses under person so orbit/auto-rotate stay locked on the face.
+state.personRoot.name = "person_root";
+state.personRoot.add(glassesRoot);
+scene.add(state.personRoot);
 
 function resize() {
-  const w = canvas.clientWidth || 960;
-  const h = Math.max(320, Math.round(w * 0.66));
-  canvas.width = w * (window.devicePixelRatio > 1 ? Math.min(window.devicePixelRatio, 2) : 1);
-  // keep CSS size; renderer uses drawing buffer
   const rect = canvas.getBoundingClientRect();
   const rw = Math.max(320, Math.floor(rect.width));
   const rh = Math.max(240, Math.floor(rect.height || rw * 0.66));
@@ -110,51 +114,112 @@ function prepareModel(root) {
   const size = box.getSize(new THREE.Vector3());
   const center = box.getCenter(new THREE.Vector3());
   root.position.sub(center);
-  root.userData.size = size;
+  root.userData.size = size.clone();
+  root.userData.box = box.clone();
   root.traverse((o) => {
     if (o.isMesh) {
       o.frustumCulled = false;
       o.castShadow = false;
       o.receiveShadow = false;
+      if (o.material) {
+        o.material.side = THREE.FrontSide;
+        o.material.needsUpdate = true;
+      }
     }
   });
   return root;
 }
 
-function loadPerson() {
-  metaEl.textContent = "Loading 3D person bust…";
+function placePerson(model, meta) {
+  // feet on ground (y=0)
+  const box = new THREE.Box3().setFromObject(model);
+  const size = box.getSize(new THREE.Vector3());
+  const minY = box.min.y;
+  model.position.y -= minY;
+  model.updateMatrixWorld(true);
+
+  const after = new THREE.Box3().setFromObject(model);
+  const h = after.max.y - after.min.y;
+  const depth = after.max.z - after.min.z;
+  const width = after.max.x - after.min.x;
+
+  const mode = meta?.anchor_mode || (meta?.kind === "bust" ? "fixed" : "bbox_head");
+  if (mode === "fixed" && meta?.anchor) {
+    state.faceAnchor.set(
+      Number(meta.anchor.x) || 0,
+      Number(meta.anchor.y) || h * 0.9,
+      Number(meta.anchor.z) || depth * 0.2,
+    );
+  } else {
+    // Head / face region for full-body Meshy humanoids
+    state.faceAnchor.set(
+      0,
+      after.min.y + h * 0.905,
+      after.max.z * 0.55 + depth * 0.08,
+    );
+  }
+
+  // Head width estimate for glasses scale
+  state.headWidth = Math.max(0.14, Math.min(0.42, width * (meta?.kind === "bust" ? 0.55 : 0.18)));
+
+  // Frame camera for full body or bust
+  const midY = (after.min.y + after.max.y) * 0.55;
+  controls.target.set(0, midY, 0);
+  const dist = Math.max(1.8, h * 1.65);
+  camera.position.set(dist * 0.18, midY + h * 0.05, dist);
+  controls.update();
+
+  glassesRoot.position.copy(state.faceAnchor);
+  applyFit();
+}
+
+function clearPerson() {
+  while (state.personRoot.children.length) {
+    state.personRoot.remove(state.personRoot.children[0]);
+  }
+  state.person = null;
+}
+
+function loadPerson(personMeta) {
+  const meta = personMeta || state.activePerson;
+  if (!meta) return Promise.resolve(false);
+  state.activePerson = meta;
+  const url = meta.glb_url || `/catalog/glb/${meta.glb}`;
+  metaEl.textContent = `Loading ${meta.name}…`;
+
+  if (state.personCache[meta.id]) {
+    clearPerson();
+    const model = state.personCache[meta.id].clone(true);
+    // recompute size on clone
+    prepareModel(model);
+    state.personRoot.add(model);
+    state.person = model;
+    placePerson(model, meta);
+    metaEl.textContent = `${meta.name} ready · pick glasses`;
+    if (state.selected) loadGlasses(state.selected);
+    return Promise.resolve(true);
+  }
+
   return new Promise((resolve) => {
     loader.load(
-      "/catalog/glb/person_bust.glb",
+      url,
       (gltf) => {
         const model = prepareModel(gltf.scene);
-        // lift so feet sit on pedestal
-        const box = new THREE.Box3().setFromObject(model);
-        const minY = box.min.y;
-        model.position.y -= minY + 0.35;
-        state.person = model;
-        scene.add(model);
-        // face anchor relative to person after lift
-        state.faceAnchor.set(0, 1.55 - minY - 0.35 + 0.08, 0.9);
-        glassesRoot.position.copy(state.faceAnchor);
-        metaEl.textContent = "3D person ready · pick glasses";
+        state.personCache[meta.id] = model;
+        clearPerson();
+        const inst = model.clone(true);
+        prepareModel(inst);
+        state.personRoot.add(inst);
+        state.person = inst;
+        placePerson(inst, meta);
+        metaEl.textContent = `${meta.name} ready · pick glasses`;
+        if (state.selected) loadGlasses(state.selected);
         resolve(true);
       },
       undefined,
-      () => {
-        metaEl.textContent = "Failed to load person_bust.glb — using placeholder";
-        // placeholder sphere head
-        const g = new THREE.Group();
-        const head = new THREE.Mesh(
-          new THREE.SphereGeometry(0.95, 32, 24),
-          new THREE.MeshStandardMaterial({ color: 0xebbca2 }),
-        );
-        head.position.y = 1.55;
-        g.add(head);
-        state.person = g;
-        scene.add(g);
-        state.faceAnchor.set(0, 1.58, 0.9);
-        glassesRoot.position.copy(state.faceAnchor);
+      (err) => {
+        console.error(err);
+        metaEl.textContent = `Failed to load ${meta.glb}`;
         resolve(false);
       },
     );
@@ -162,19 +227,20 @@ function loadPerson() {
 }
 
 function loadGlasses(frame) {
-  if (!frame?.glb_url) {
+  if (!frame?.glb_url && !frame?.glb) {
     metaEl.textContent = `${frame?.name || "Frame"} has no GLB`;
     return;
   }
+  const url = frame.glb_url || `/catalog/glb/${frame.glb}`;
   if (state.glassesCache[frame.id]) {
     attachGlasses(state.glassesCache[frame.id], frame);
     return;
   }
   if (state.loading[frame.id]) return;
   state.loading[frame.id] = true;
-  metaEl.textContent = `Loading 3D ${frame.name}…`;
+  metaEl.textContent = `Loading glasses ${frame.name}…`;
   loader.load(
-    frame.glb_url,
+    url,
     (gltf) => {
       const model = prepareModel(gltf.scene.clone(true));
       state.glassesCache[frame.id] = model;
@@ -194,23 +260,45 @@ function attachGlasses(model, frame) {
   state.glasses = model;
   glassesRoot.add(model);
   applyFit();
-  metaEl.textContent = `${frame.name} · 3D GLB on person · scale ${state.fitScale.toFixed(2)}`;
+  const personName = state.activePerson?.name || "person";
+  metaEl.textContent = `${frame.name} on ${personName} · scale ${state.fitScale.toFixed(2)}`;
 }
 
 function applyFit() {
-  if (!state.glasses) return;
+  if (!state.glasses) {
+    glassesRoot.position.copy(state.faceAnchor);
+    return;
+  }
   const size = state.glasses.userData.size || new THREE.Vector3(1.6, 0.5, 1);
-  // target glasses width ~ 1.55 world units (matches bust face)
-  const targetW = 1.55 * state.fitScale;
+  const targetW = state.headWidth * 1.15 * state.fitScale;
   const s = targetW / Math.max(size.x, 0.01);
   state.glasses.scale.setScalar(s);
-  state.glasses.position.set(0, state.yOffset, 0.02);
-  state.glasses.rotation.set(-0.05, 0, 0);
+  state.glasses.position.set(0, state.yOffset, state.zOffset);
+  state.glasses.rotation.set(-0.04, 0, 0);
   glassesRoot.position.set(
     state.faceAnchor.x,
-    state.faceAnchor.y + state.yOffset * 0.2,
+    state.faceAnchor.y + state.yOffset * 0.15,
     state.faceAnchor.z,
   );
+}
+
+function renderPersonSelect() {
+  personSelect.innerHTML = "";
+  const list = state.personModels.length
+    ? state.personModels
+    : [
+        { id: "person_female", name: "Female (Meshy)", glb: "person_female.glb", default: true },
+        { id: "person_male", name: "Male (Meshy)", glb: "person_male.glb" },
+        { id: "person_bust", name: "Studio Bust", glb: "person_bust.glb" },
+      ];
+  list.forEach((p) => {
+    const opt = document.createElement("option");
+    opt.value = p.id;
+    opt.textContent = p.name + (p.kind === "full_body" ? " · full body" : "");
+    personSelect.appendChild(opt);
+  });
+  const def = list.find((p) => p.default) || list[0];
+  if (def) personSelect.value = def.id;
 }
 
 function renderCatalog() {
@@ -224,7 +312,7 @@ function renderCatalog() {
       <img src="${f.svg_url || ""}" alt="" onerror="this.style.opacity=0.2" />
       <div>
         <h3>${f.name}</h3>
-        <p>${f.style || ""} · ${f.glb ? "GLB" : "2D"} · $${((f.price_cents || 0) / 100).toFixed(2)}</p>
+        <p>${f.style || ""} · ${f.glb || f.has_glb ? "GLB" : "2D"} · $${((f.price_cents || 0) / 100).toFixed(2)}</p>
       </div>`;
     el.onclick = () => selectFrame(f.id);
     catalogEl.appendChild(el);
@@ -240,23 +328,25 @@ function selectFrame(id) {
 }
 
 async function loadCatalog() {
-  const data = await api("/api/catalog?category=glasses");
-  state.frames = (data.frames || []).filter((f) => f.glb_url || f.glb);
-  if (!state.frames.length) {
-    const all = await api("/api/catalog");
-    state.frames = all.frames || [];
-  }
-  // person models metadata (optional)
+  const data = await api("/api/catalog");
+  state.frames = (data.frames || []).filter((f) => f.glb_url || f.glb || f.has_glb);
+  if (!state.frames.length) state.frames = data.frames || [];
   try {
     const full = await api("/api/catalog/meta");
-    if (full.person_models) state.personModels = full.person_models;
+    if (full.person_models?.length) state.personModels = full.person_models;
   } catch (_) {
-    /* optional */
+    if (data.person_models?.length) state.personModels = data.person_models;
   }
+  renderPersonSelect();
   renderCatalog();
-  const first = state.frames.find((f) => f.glb_url) || state.frames[0];
+  const first = state.frames.find((f) => f.glb_url || f.glb) || state.frames[0];
   if (first) selectFrame(first.id);
 }
+
+personSelect.addEventListener("change", () => {
+  const meta = state.personModels.find((p) => p.id === personSelect.value);
+  if (meta) loadPerson(meta);
+});
 
 scaleEl.addEventListener("input", () => {
   state.fitScale = Number(scaleEl.value);
@@ -268,6 +358,11 @@ yoffEl.addEventListener("input", () => {
   yVal.textContent = state.yOffset.toFixed(2);
   applyFit();
 });
+zoffEl.addEventListener("input", () => {
+  state.zOffset = Number(zoffEl.value);
+  zVal.textContent = state.zOffset.toFixed(2);
+  applyFit();
+});
 filterEl.addEventListener("change", renderCatalog);
 btnAuto.addEventListener("click", () => {
   state.auto = !state.auto;
@@ -276,7 +371,7 @@ btnAuto.addEventListener("click", () => {
 });
 btnSnap.addEventListener("click", () => {
   const a = document.createElement("a");
-  a.download = `beear-3d-${state.selected?.id || "snap"}.png`;
+  a.download = `beear-3d-${state.activePerson?.id || "person"}-${state.selected?.id || "snap"}.png`;
   a.href = canvas.toDataURL("image/png");
   a.click();
 });
@@ -285,8 +380,8 @@ let t0 = performance.now();
 function tick(now) {
   const dt = (now - t0) / 1000;
   t0 = now;
-  if (state.auto && state.person) {
-    state.person.rotation.y += dt * 0.35;
+  if (state.auto && state.personRoot) {
+    state.personRoot.rotation.y += dt * 0.28;
   }
   controls.update();
   renderer.render(scene, camera);
@@ -297,8 +392,15 @@ async function main() {
   resize();
   btnAuto.classList.add("active");
   btnAuto.textContent = "Auto-rotate ON";
-  await loadPerson();
   await loadCatalog();
+  const def =
+    state.personModels.find((p) => p.default) ||
+    state.personModels.find((p) => p.id === "person_female") ||
+    state.personModels[0];
+  if (def) {
+    personSelect.value = def.id;
+    await loadPerson(def);
+  }
   requestAnimationFrame(tick);
 }
 

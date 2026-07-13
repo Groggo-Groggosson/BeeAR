@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "frames": [
     {
       "id": "aviator_gold",
@@ -409,16 +409,54 @@
   ],
   "person_models": [
     {
+      "id": "person_female",
+      "name": "Female (Meshy)",
+      "glb": "person_female.glb",
+      "kind": "full_body",
+      "gender": "female",
+      "default": true,
+      "anchor": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "anchor_mode": "bbox_head",
+      "scale": 1.0,
+      "description": "Full-body female character GLB (Meshy) for realistic 3D try-on",
+      "source": "meshy-019f58c5-3a3f-7dc1-832c-f38169ef5d0f.glb"
+    },
+    {
+      "id": "person_male",
+      "name": "Male (Meshy)",
+      "glb": "person_male.glb",
+      "kind": "full_body",
+      "gender": "male",
+      "default": false,
+      "anchor": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "anchor_mode": "bbox_head",
+      "scale": 1.0,
+      "description": "Full-body male character GLB (Meshy) for realistic 3D try-on",
+      "source": "meshy-019f58c8-0585-7e2b-aa0c-387fbe438e0b.glb"
+    },
+    {
       "id": "person_bust",
-      "name": "Studio Bust",
+      "name": "Studio Bust (low-poly)",
       "glb": "person_bust.glb",
+      "kind": "bust",
+      "gender": "neutral",
+      "default": false,
       "anchor": {
         "x": 0.0,
         "y": 1.55,
         "z": 0.92
       },
+      "anchor_mode": "fixed",
       "scale": 1.0,
-      "description": "Low-poly 3D person bust for offline WebGL try-on"
+      "description": "Low-poly bust fallback for offline demos"
     }
   ]
 }
