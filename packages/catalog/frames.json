@@ -1,5 +1,5 @@
 {
-  "version": 7,
+  "version": 8,
   "frames": [
     {
       "id": "meshy_ellipse_frames",
@@ -501,6 +501,25 @@
         "bridge_mm": 20,
         "temple_mm": 140
       }
+    },
+    {
+      "id": "square_matte_slate",
+      "name": "Square Matte Slate",
+      "brand": "BeeAR Studio",
+      "category": "glasses",
+      "style": "rectangle",
+      "color": "#475569",
+      "lens_tint": "rgba(71,85,105,0.22)",
+      "price_cents": 6900,
+      "svg": "rectangle.svg",
+      "glb": "rectangle-silver.glb",
+      "featured": false,
+      "fit": {
+        "width_mm": 138,
+        "bridge_mm": 19,
+        "temple_mm": 142
+      },
+      "description": "Matte slate square frames for everyday office AR try-on"
     }
   ],
   "person_models": [
@@ -512,13 +531,13 @@
       "gender": "female",
       "default": true,
       "anchor": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
+        "x": 0,
+        "y": 0,
+        "z": 0
       },
       "anchor_mode": "bbox_head",
       "eye_height_ratio": 0.875,
-      "scale": 1.0,
+      "scale": 1,
       "description": "Full-body female character GLB (Meshy) for realistic 3D try-on",
       "source": "meshy-019f58c5-3a3f-7dc1-832c-f38169ef5d0f.glb"
     },
@@ -530,13 +549,13 @@
       "gender": "male",
       "default": false,
       "anchor": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
+        "x": 0,
+        "y": 0,
+        "z": 0
       },
       "anchor_mode": "bbox_head",
       "eye_height_ratio": 0.88,
-      "scale": 1.0,
+      "scale": 1,
       "description": "Full-body male character GLB (Meshy) for realistic 3D try-on",
       "source": "meshy-019f58c8-0585-7e2b-aa0c-387fbe438e0b.glb"
     },
@@ -548,12 +567,12 @@
       "gender": "neutral",
       "default": false,
       "anchor": {
-        "x": 0.0,
+        "x": 0,
         "y": 1.55,
         "z": 0.92
       },
       "anchor_mode": "fixed",
-      "scale": 1.0,
+      "scale": 1,
       "description": "Low-poly bust fallback for offline demos"
     }
   ]
