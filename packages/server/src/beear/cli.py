@@ -108,9 +108,28 @@ def search_cmd(
     rprint(table)
     rprint({"count": len(hits), "query": query})
 
+@catalog_app.command("styles")
+def catalog_styles() -> None:
+    """Count frames by style (catalog breakdown)."""
+    from collections import Counter
+
+    c = Counter(str(f.get("style") or "unknown") for f in list_frames())
+    table = Table(title="Styles")
+    table.add_column("Style")
+    table.add_column("Count", justify="right")
+    for style, n in c.most_common():
+        table.add_row(style, str(n))
+    console.print(table)
+
+
 @catalog_app.command("list")
 def catalog_list(
     category: str | None = typer.Option(None, "--category", "-c"),
+    style: str | None = typer.Option(None, "--style", "-s"),
+    max_price: int | None = typer.Option(
+        None, "--max-price", help="Max price_cents filter"
+    ),
+    glb_only: bool = typer.Option(False, "--glb", help="Only frames with GLB mesh"),
 ) -> None:
     table = Table(title="BeeAR catalog")
     table.add_column("Id")
@@ -118,7 +137,12 @@ def catalog_list(
     table.add_column("Category")
     table.add_column("Style")
     table.add_column("Price")
-    for f in list_frames(category=category):
+    frames = list_frames(category=category, style=style)
+    if max_price is not None:
+        frames = [f for f in frames if int(f.get("price_cents") or 0) <= max_price]
+    if glb_only:
+        frames = [f for f in frames if f.get("has_glb") or f.get("glb")]
+    for f in frames:
         table.add_row(
             f["id"],
             f["name"],
@@ -127,6 +151,7 @@ def catalog_list(
             f"${(f.get('price_cents') or 0) / 100:.2f}",
         )
     console.print(table)
+    console.print(f"[dim]count={len(frames)}[/dim]")
 
 
 @catalog_app.command("show")
