@@ -1,5 +1,5 @@
 {
-  "version": 15,
+  "version": 16,
   "frames": [
     {
       "id": "meshy_ellipse_frames",
@@ -669,6 +669,36 @@
       },
       "render_mode": "glb3d",
       "description": "Violet cat-eye demo frame"
+    },
+    {
+      "id": "hex_smoke",
+      "name": "Hex Smoke",
+      "brand": "BeeAR Studio",
+      "category": "glasses",
+      "style": "hex",
+      "color": "#4B5563",
+      "lens_tint": "rgba(55,65,81,0.28)",
+      "price_cents": 8200,
+      "svg": "hex.svg",
+      "glb": "hex-graphite.glb",
+      "fit": {
+        "width_mm": 136,
+        "bridge_mm": 18,
+        "temple_mm": 142
+      },
+      "studio_fit": {
+        "scale": 1.04,
+        "y": -0.01,
+        "z": 0.02
+      },
+      "ar_fit": {
+        "scale": 1.02,
+        "y": 0,
+        "pitch": 0.05,
+        "yaw": 0
+      },
+      "render_mode": "glb3d",
+      "description": "Smoky hex frame — light GLB for Pages-friendly demos"
     }
   ],
   "person_models": [
