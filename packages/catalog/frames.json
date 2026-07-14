@@ -1,5 +1,5 @@
 {
-  "version": 17,
+  "version": 18,
   "frames": [
     {
       "id": "meshy_ellipse_frames",
@@ -729,6 +729,36 @@
       },
       "render_mode": "glb3d",
       "description": "Matte rectangle — light GLB for static demos"
+    },
+    {
+      "id": "sport_lime",
+      "name": "Sport Lime",
+      "brand": "BeeAR Active",
+      "category": "glasses",
+      "style": "sport",
+      "color": "#84CC16",
+      "lens_tint": "rgba(132,204,22,0.22)",
+      "price_cents": 9800,
+      "svg": "sport.svg",
+      "glb": "sport-blue.glb",
+      "fit": {
+        "width_mm": 140,
+        "bridge_mm": 17,
+        "temple_mm": 130
+      },
+      "studio_fit": {
+        "scale": 1.05,
+        "y": -0.01,
+        "z": 0.025
+      },
+      "ar_fit": {
+        "scale": 1.03,
+        "y": 0,
+        "pitch": 0.04,
+        "yaw": 0
+      },
+      "render_mode": "glb3d",
+      "description": "Lime sport wrap — light catalog SKU for demos"
     }
   ],
   "person_models": [
