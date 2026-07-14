@@ -1,5 +1,6 @@
 # BeeAR
 
+[![Live demo](https://img.shields.io/badge/demo-GitHub%20Pages-2088FF.svg)](https://mergeos-bounties.github.io/BeeAR/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![Server](https://img.shields.io/badge/beear-0.4.8-0E8A16.svg)](packages/server/pyproject.toml)
 [![3D Person](https://img.shields.io/badge/3D-person%20%2B%20GLB-5B8CFF.svg)](packages/web/studio3d.html)
@@ -9,12 +10,37 @@
 
 **BeeAR** is a **virtual try-on** stack for **glasses and accessories** — frame catalog, **full 3D person + glasses GLB** studio, pupil-distance (PD) fit, multi-frame compare, plus web / desktop / Android clients on shared libraries.
 
-**Product:** [mergeos-bounties/BeeAR](https://github.com/mergeos-bounties/BeeAR)
+**Product:** [mergeos-bounties/BeeAR](https://github.com/mergeos-bounties/BeeAR) · **Live demo:** [mergeos-bounties.github.io/BeeAR](https://mergeos-bounties.github.io/BeeAR/)
+
+---
+
+## Live demo (GitHub Pages)
+
+Static, **minified** browser demo — no Python server required:
+
+| Page | URL |
+| --- | --- |
+| **Camera / 2D try-on** | https://mergeos-bounties.github.io/BeeAR/ |
+| **3D person studio** | https://mergeos-bounties.github.io/BeeAR/studio3d.html |
+
+- Catalog + SVG + GLB assets are shipped as static files (`site/catalog/`).
+- API calls are shimmed by `static-api.js` (sessions/wishlist soft-mocked).
+- Build locally: `node scripts/build-pages.mjs` → open `site/` with any static server.
+- Deploy: GitHub Actions workflow **pages** (push to `master` or **workflow_dispatch**).
+- On **library release** (`node scripts/release-libs.mjs`), try-on IIFE is emitted as **`.min.js`** and the Pages site is rebuilt with minified JS/CSS.
+
+```powershell
+# preview static demo
+node scripts/build-pages.mjs
+npx --yes serve site -p 4173
+# → http://127.0.0.1:4173/
+```
 
 ---
 
 ## Table of contents
 
+- [Live demo (GitHub Pages)](#live-demo-github-pages)
 - [3D person try-on (new)](#3d-person-try-on-new)
 - [Demo video](#demo-video)
 - [Monorepo packages](#monorepo-packages)
@@ -114,7 +140,7 @@ BeeAR try-on ships as **reusable libraries** — download prebuilt artifacts fro
 
 | Lib | Artifact | Consumers |
 | --- | --- | --- |
-| **`@beear/tryon` (npm)** | [`beear-tryon-0.4.0.js`](https://github.com/mergeos-bounties/BeeAR/releases/download/libs-v0.4.0/beear-tryon-0.4.0.js) · [npm tgz](https://github.com/mergeos-bounties/BeeAR/releases/download/libs-v0.4.0/beear-tryon-0.4.0.tgz) | Web host, Android WebView, desktop |
+| **`@beear/tryon` (npm)** | [`beear-tryon-0.4.0.min.js`](https://github.com/mergeos-bounties/BeeAR/releases/download/libs-v0.4.0/beear-tryon-0.4.0.min.js) · [full JS](https://github.com/mergeos-bounties/BeeAR/releases/download/libs-v0.4.0/beear-tryon-0.4.0.js) · [npm tgz](https://github.com/mergeos-bounties/BeeAR/releases/download/libs-v0.4.0/beear-tryon-0.4.0.tgz) | Web host, Android WebView, desktop |
 | **`com.beear:beear-webview` (AAR)** | [`beear-webview-0.4.0.aar`](https://github.com/mergeos-bounties/BeeAR/releases/download/libs-v0.4.0/beear-webview-0.4.0.aar) · [POM](https://github.com/mergeos-bounties/BeeAR/releases/download/libs-v0.4.0/beear-webview-0.4.0.pom) | Any Android app embedding try-on |
 
 ### Web install

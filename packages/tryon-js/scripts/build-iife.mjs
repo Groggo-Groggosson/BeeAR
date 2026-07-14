@@ -1,7 +1,9 @@
 /**
  * Bundle ESM sources into a single IIFE for <script> tags and Android WebView.
- * No external bundler required. Version is read from package.json.
+ * Also emits a minified build (esbuild when available, crude fallback otherwise).
+ * Version is read from package.json.
  */
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -14,6 +16,7 @@ fs.mkdirSync(dist, { recursive: true });
 
 const pkg = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
 const version = pkg.version || "0.0.0";
+const noMinify = process.argv.includes("--no-minify");
 
 // Keep VERSION in ESM source in sync
 const indexPath = path.join(src, "index.js");
@@ -68,15 +71,75 @@ ${body}
 const outPath = path.join(dist, "beear-tryon.js");
 fs.writeFileSync(outPath, out);
 
-// min-friendly copy name with version (for release artifacts)
+// versioned full build
 const versioned = path.join(dist, `beear-tryon-${version}.js`);
 fs.writeFileSync(versioned, out);
 
-// also copy into web assets for the demo host
+function crudeMinifyJs(code) {
+  return code
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/(^|[^:])\/\/.*$/gm, "$1")
+    .replace(/\n+/g, "\n")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n /g, "\n")
+    .trim();
+}
+
+function minifyWithEsbuild(infile, outfile) {
+  const npx = process.platform === "win32" ? "npx.cmd" : "npx";
+  try {
+    execFileSync(
+      npx,
+      [
+        "--yes",
+        "esbuild@0.25.0",
+        infile,
+        "--minify",
+        `--outfile=${outfile}`,
+        "--target=es2018",
+        "--legal-comments=none",
+      ],
+      {
+        cwd: root,
+        stdio: "pipe",
+        shell: process.platform === "win32",
+        env: process.env,
+      },
+    );
+    return fs.existsSync(outfile);
+  } catch {
+    return false;
+  }
+}
+
+// minified artifacts
+const minPath = path.join(dist, "beear-tryon.min.js");
+const minVersioned = path.join(dist, `beear-tryon-${version}.min.js`);
+if (!noMinify) {
+  if (minifyWithEsbuild(outPath, minPath)) {
+    console.log("minified via esbuild →", minPath, fs.statSync(minPath).size, "bytes");
+  } else {
+    const min = crudeMinifyJs(out);
+    fs.writeFileSync(minPath, min);
+    console.log("minified via fallback →", minPath, min.length, "bytes");
+  }
+  fs.copyFileSync(minPath, minVersioned);
+} else {
+  fs.copyFileSync(outPath, minPath);
+  fs.copyFileSync(outPath, minVersioned);
+}
+
+// also copy into web assets for the demo host (prefer min for size, keep full name)
 const webAssets = path.join(root, "..", "web", "assets");
 if (fs.existsSync(webAssets)) {
+  // Keep unminified name for server/debug; also drop .min next to it
   fs.writeFileSync(path.join(webAssets, "beear-tryon.js"), out);
+  if (fs.existsSync(minPath)) {
+    fs.copyFileSync(minPath, path.join(webAssets, "beear-tryon.min.js"));
+  }
   console.log("copied → packages/web/assets/beear-tryon.js");
 }
 console.log("wrote", outPath, out.length, "bytes");
 console.log("wrote", versioned);
+console.log("wrote", minPath);
+console.log("wrote", minVersioned);

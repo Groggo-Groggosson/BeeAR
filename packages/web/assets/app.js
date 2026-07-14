@@ -406,6 +406,10 @@ function drawImageCover(img, w, h) {
 }
 
 async function api(path, opts) {
+  const S = globalThis.BeeARStatic;
+  if (S && S.detectStatic()) {
+    return S.staticApi(path, opts);
+  }
   const r = await fetch(path, {
     headers: { "Content-Type": "application/json" },
     ...opts,

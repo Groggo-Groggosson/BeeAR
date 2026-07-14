@@ -52,16 +52,44 @@ function copy(src, dest) {
 if (fs.existsSync(outDir)) fs.rmSync(outDir, { recursive: true, force: true });
 fs.mkdirSync(outDir, { recursive: true });
 
-// --- Web / JS lib ---
+// --- Web / JS lib (full + minified) ---
 console.log("\n=== @beear/tryon (web) ===");
 run("npm test", { cwd: tryonJs });
 run("npm run build", { cwd: tryonJs });
 
 const iife = path.join(tryonJs, "dist", "beear-tryon.js");
 const iifeVer = path.join(tryonJs, "dist", `beear-tryon-${version}.js`);
+const iifeMin = path.join(tryonJs, "dist", "beear-tryon.min.js");
+const iifeMinVer = path.join(tryonJs, "dist", `beear-tryon-${version}.min.js`);
 if (!fs.existsSync(iife)) throw new Error("missing dist/beear-tryon.js");
 copy(iife, path.join(outDir, "beear-tryon.js"));
 copy(fs.existsSync(iifeVer) ? iifeVer : iife, path.join(outDir, `beear-tryon-${version}.js`));
+if (fs.existsSync(iifeMin)) {
+  copy(iifeMin, path.join(outDir, "beear-tryon.min.js"));
+  copy(
+    fs.existsSync(iifeMinVer) ? iifeMinVer : iifeMin,
+    path.join(outDir, `beear-tryon-${version}.min.js`),
+  );
+} else {
+  console.warn("warn: missing minified IIFE — run build with esbuild/npx available");
+}
+
+// Static GitHub Pages demo bundle (minified site/)
+console.log("\n=== GitHub Pages static demo (site/) ===");
+try {
+  run("node scripts/build-pages.mjs");
+  const siteDir = path.join(root, "site");
+  if (fs.existsSync(siteDir)) {
+    const pagesNote = path.join(outDir, "PAGES.md");
+    fs.writeFileSync(
+      pagesNote,
+      `# BeeAR static demo\n\nBuilt with \`node scripts/build-pages.mjs\` (JS/CSS minified).\n\nLive: https://mergeos-bounties.github.io/BeeAR/\n\nLocal: open \`site/\` via any static server (e.g. \`npx serve site\`).\n`,
+    );
+    console.log("  site/ ready — deploy via .github/workflows/pages.yml");
+  }
+} catch (err) {
+  console.warn("warn: build-pages failed (non-fatal for lib release):", err.message || err);
+}
 
 // npm pack (Windows: npm.cmd)
 const npmBin = process.platform === "win32" ? "npm.cmd" : "npm";
@@ -151,14 +179,17 @@ Reusable **web** and **Android** libraries for virtual try-on (glasses / accesso
 
 | File | Platform | Install |
 | --- | --- | --- |
-| \`beear-tryon-${version}.js\` | Browser / WebView | \`<script src="…">\` → \`window.BeeARTryOn\` |
+| \`beear-tryon-${version}.js\` | Browser / WebView | Full IIFE → \`window.BeeARTryOn\` |
+| \`beear-tryon-${version}.min.js\` | Browser / WebView | **Minified** IIFE (prefer for production) |
 | \`beear-tryon-*.tgz\` | Node / bundlers | \`npm install ./beear-tryon-*.tgz\` or from GitHub Release |
 | \`beear-webview-${version}.aar\` | Android | \`implementation(files("libs/beear-webview-${version}.aar"))\` |
+
+**Live demo (GitHub Pages, minified static build):** https://mergeos-bounties.github.io/BeeAR/
 
 ## Web — \`@beear/tryon\`
 
 \`\`\`html
-<script src="beear-tryon-${version}.js"></script>
+<script src="beear-tryon-${version}.min.js"></script>
 <script>
   const fit = BeeARTryOn.estimateFit(frame, { pupilDistancePx: 64, faceWidthPx: 180 });
   console.log(BeeARTryOn.VERSION); // ${version}

@@ -7,6 +7,7 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+site/
 node_modules/
 .env
 .env.*
@@ -19,3 +20,7 @@ local.properties
 *.apk
 *.aab
 packages/desktop/out/
+
+# generated min copies (release builds ship them from tryon-js/dist)
+packages/web/assets/*.min.js
+

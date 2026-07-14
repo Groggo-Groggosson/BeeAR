@@ -4,7 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>BeeAR — 3D Person Try-On</title>
+  <meta name="description" content="BeeAR 3D Studio — full person + glasses GLB try-on in the browser." />
   <link rel="stylesheet" href="/assets/studio3d.css" />
+  <meta property="og:title" content="BeeAR — 3D Person Studio" />
+  <meta property="og:description" content="Full-body 3D characters + glasses GLB try-on in the browser." />
 </head>
 <body>
   <div id="app">
@@ -17,6 +20,7 @@
         </div>
       </div>
       <div class="actions">
+        <a class="btn" href="https://github.com/mergeos-bounties/BeeAR" target="_blank" rel="noopener">GitHub</a>
         <a class="btn" href="/">← 2D / Camera</a>
         <button id="btn-auto" class="btn primary" type="button">Auto-rotate</button>
         <button id="btn-snap" class="btn" type="button">Snapshot</button>
@@ -71,6 +75,7 @@
       }
     }
   </script>
+  <script src="/assets/static-api.js"></script>
   <script type="module" src="/assets/studio3d.js"></script>
 </body>
 </html>

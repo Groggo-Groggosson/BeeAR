@@ -112,6 +112,10 @@ function resize() {
 window.addEventListener("resize", resize);
 
 async function api(path) {
+  const S = globalThis.BeeARStatic;
+  if (S && S.detectStatic()) {
+    return S.staticApi(path);
+  }
   const r = await fetch(path);
   if (!r.ok) throw new Error(await r.text());
   return r.json();

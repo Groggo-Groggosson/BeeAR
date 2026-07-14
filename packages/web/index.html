@@ -3,7 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-  <title>BeeAR — Try on glasses</title>
+  <title>BeeAR — Virtual try-on demo</title>
+  <meta name="description" content="BeeAR live demo: try on glasses & accessories in your browser. Catalog, PD fit, 3D studio." />
+  <meta property="og:title" content="BeeAR — Virtual try-on" />
+  <meta property="og:description" content="Browser demo for glasses try-on · PD fit · 3D person studio" />
+  <meta property="og:type" content="website" />
   <link rel="stylesheet" href="/assets/app.css" />
 </head>
 <body>
@@ -39,6 +43,7 @@
         </div>
       </div>
       <div class="actions">
+        <a class="btn" href="https://github.com/mergeos-bounties/BeeAR" target="_blank" rel="noopener">GitHub</a>
         <button id="btn-lang" class="btn" type="button">VI</button>
         <a id="btn-3d" class="btn primary" href="/studio3d.html">🧑 3D Person</a>
         <!-- Live Privacy Status Toggle -->
@@ -83,6 +88,7 @@
 
   <!-- @beear/tryon core lib (shared web + Android WebView) -->
   <script src="/assets/beear-tryon.js"></script>
+  <script src="/assets/static-api.js"></script>
   <!-- Optional MediaPipe Face Mesh (fails soft if offline/CDN blocked) -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
   <!-- Optional Three.js GLB renderer (app falls back to canvas shapes if blocked) -->
