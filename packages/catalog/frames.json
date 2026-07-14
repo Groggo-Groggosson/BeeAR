@@ -1,5 +1,5 @@
 {
-  "version": 18,
+  "version": 19,
   "frames": [
     {
       "id": "meshy_ellipse_frames",
@@ -759,6 +759,36 @@
       },
       "render_mode": "glb3d",
       "description": "Lime sport wrap — light catalog SKU for demos"
+    },
+    {
+      "id": "cateye_blush",
+      "name": "Cat-Eye Blush",
+      "brand": "BeeAR Studio",
+      "category": "glasses",
+      "style": "cat-eye",
+      "color": "#F472B6",
+      "lens_tint": "rgba(244,114,182,0.2)",
+      "price_cents": 8800,
+      "svg": "cateye.svg",
+      "glb": "cateye-rose.glb",
+      "fit": {
+        "width_mm": 136,
+        "bridge_mm": 16,
+        "temple_mm": 140
+      },
+      "studio_fit": {
+        "scale": 1.04,
+        "y": -0.012,
+        "z": 0.022
+      },
+      "ar_fit": {
+        "scale": 1.02,
+        "y": 0,
+        "pitch": 0.05,
+        "yaw": 0
+      },
+      "render_mode": "glb3d",
+      "description": "Blush cat-eye — light catalog SKU"
     }
   ],
   "person_models": [
