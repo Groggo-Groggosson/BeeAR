@@ -1,5 +1,5 @@
 {
-  "version": 19,
+  "version": 20,
   "frames": [
     {
       "id": "meshy_ellipse_frames",
@@ -129,7 +129,7 @@
         "yaw": 0
       },
       "render_mode": "glb3d",
-      "description": "Classic gold aviator — light GLB for instant demo (GitHub Pages)"
+      "description": "Classic gold aviator \u2014 light GLB for instant demo (GitHub Pages)"
     },
     {
       "id": "wayfarer_black",
@@ -698,7 +698,7 @@
         "yaw": 0
       },
       "render_mode": "glb3d",
-      "description": "Smoky hex frame — light GLB for Pages-friendly demos"
+      "description": "Smoky hex frame \u2014 light GLB for Pages-friendly demos"
     },
     {
       "id": "rectangle_matte",
@@ -728,7 +728,7 @@
         "yaw": 0
       },
       "render_mode": "glb3d",
-      "description": "Matte rectangle — light GLB for static demos"
+      "description": "Matte rectangle \u2014 light GLB for static demos"
     },
     {
       "id": "sport_lime",
@@ -758,7 +758,7 @@
         "yaw": 0
       },
       "render_mode": "glb3d",
-      "description": "Lime sport wrap — light catalog SKU for demos"
+      "description": "Lime sport wrap \u2014 light catalog SKU for demos"
     },
     {
       "id": "cateye_blush",
@@ -788,7 +788,37 @@
         "yaw": 0
       },
       "render_mode": "glb3d",
-      "description": "Blush cat-eye — light catalog SKU"
+      "description": "Blush cat-eye \u2014 light catalog SKU"
+    },
+    {
+      "id": "clubmaster_ink",
+      "name": "Clubmaster Ink",
+      "brand": "BeeAR Studio",
+      "category": "glasses",
+      "style": "clubmaster",
+      "color": "#1E293B",
+      "lens_tint": "rgba(30,41,59,0.18)",
+      "price_cents": 9200,
+      "svg": "clubmaster.svg",
+      "glb": "clubmaster-ink.glb",
+      "fit": {
+        "width_mm": 138,
+        "bridge_mm": 18,
+        "temple_mm": 145
+      },
+      "studio_fit": {
+        "scale": 1.03,
+        "y": -0.01,
+        "z": 0.02
+      },
+      "ar_fit": {
+        "scale": 1.01,
+        "y": 0,
+        "pitch": 0.04,
+        "yaw": 0
+      },
+      "render_mode": "glb3d",
+      "description": "Ink clubmaster browline \u2014 light catalog SKU"
     }
   ],
   "person_models": [
